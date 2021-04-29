@@ -114,17 +114,11 @@ dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}backfill_sensor_data_fi
 
 # COMMAND ----------
 
-# MAGIC %sh tail -100 /dbfs/FileStore/demo-deepaksekar/deltademoasset/backfill_sensor_data.csv
-
-# COMMAND ----------
-
 # Download Initial CSV file used in the workshop
 process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/miq89d5oaqz27ct/sensor_readings_current_labeled.csv'],
                      stdout=subprocess.PIPE, 
                      stderr=subprocess.PIPE)
 stdout, stderr = process.communicate()
-
-
 
 stdout.decode('utf-8'), stderr.decode('utf-8')
 
@@ -165,7 +159,7 @@ df1 = spark.read\
   .option("inferSchema", "true")\
   .csv(dataPath1)
 
-display(df1)
+# display(df1)
 
 # COMMAND ----------
 
@@ -250,7 +244,7 @@ df = spark.read\
   .option("inferSchema", "true")\
   .csv(dataPath)
 
-display(df)
+# display(df)
 
 # COMMAND ----------
 
@@ -259,17 +253,17 @@ df.createOrReplaceTempView("bronze_readings_view")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select * from bronze_readings_view
+# MAGIC -- select * from bronze_readings_view
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC Select count(*) from bronze_readings_view
+# MAGIC -- select count(*) from bronze_readings_view
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC Select distinct(device_operational_status) from bronze_readings_view
+# MAGIC -- select distinct(device_operational_status) from bronze_readings_view
 
 # COMMAND ----------
 
@@ -294,7 +288,6 @@ spark.sql(f"CREATE TABLE IF NOT EXISTS sensor_readings_historical_bronze USING D
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC 
 # MAGIC DROP TABLE IF EXISTS sensor_readings_historical_silver;
 
 # COMMAND ----------
@@ -311,7 +304,7 @@ df = spark.read\
   .option("inferSchema", "true")\
   .csv(dataPath)
 
-display(df)
+# display(df)
 
 # COMMAND ----------
 
@@ -414,7 +407,7 @@ spark.sql(f"CREATE TABLE sensor_readings_historical_silver_with_constraints (id 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT COUNT(*) FROM sensor_readings_historical_silver VERSION AS OF 1
+# MAGIC -- SELECT COUNT(*) FROM sensor_readings_historical_silver VERSION AS OF 1
 
 # COMMAND ----------
 
@@ -424,7 +417,7 @@ spark.sql(f"CREATE TABLE IF NOT EXISTS sensor_readings_historical_silver_clone D
 
 # Generate new loans with dollar amounts 
 tmp_df = sql("SELECT *, CAST(rand(10000)/8 AS double) AS reading_4, CAST(rand(1000)/9 AS double) AS reading_5 FROM sensor_readings_historical_silver LIMIT 10")
-display(tmp_df)
+# display(tmp_df)
 
 # COMMAND ----------
 
@@ -458,7 +451,7 @@ df = spark.read\
   .option("inferSchema", "true")\
   .csv(dataPath)
 
-display(df)
+# display(df)
 
 # COMMAND ----------
 
@@ -519,8 +512,7 @@ readings_stream.createOrReplaceTempView("readings_streaming")
 dbutils.fs.mkdirs(checkpoint_stream1_path)
 out_stream = spark.sql("""SELECT window, b.plant_id, b.plant_type, a.device_type, a.device_operational_status, count(a.device_type) count, avg(a.reading_1) average FROM readings_streaming a INNER JOIN dim_plant b GROUP BY WINDOW(a.reading_time, '2 minutes', '1 minute'), a.device_type, a.device_operational_status, b.plant_id, b.plant_type ORDER BY window DESC, a.device_type ASC LIMIT 10""")
 
-
-out_stream.writeStream.format('delta').option('location', output_sink_path).option('checkpointLocation', checkpoint_stream1_path).outputMode('complete').table("readings_agg")
+swriter = out_stream.writeStream.format('delta').option('location', output_sink_path).option('checkpointLocation', checkpoint_stream1_path).outputMode('complete').table("readings_agg")
 
 # COMMAND ----------
 
@@ -530,7 +522,8 @@ import time
 
 next_row = 0
 
-while(next_row < 12000):
+# Only loading 12 rows here
+while(next_row < 120):
   
   time.sleep(1)
 
@@ -544,4 +537,4 @@ while(next_row < 12000):
 
 # COMMAND ----------
 
-
+swriter.stop()
