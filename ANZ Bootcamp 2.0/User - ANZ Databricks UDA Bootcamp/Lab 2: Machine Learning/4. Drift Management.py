@@ -90,6 +90,10 @@ retrain_loop(
 
 # COMMAND ----------
 
+dbutils.notebook.run("./_update_features", 60, {"database_name":DATABASE_NAME})
+
+# COMMAND ----------
+
 retrain_loop(model_name, DATABASE_NAME, experiment_id, 0.6)
 
 # COMMAND ----------
@@ -100,6 +104,10 @@ retrain_loop(model_name, DATABASE_NAME, experiment_id, 0.6)
 
 # MAGIC %sql
 # MAGIC UPDATE sensor_readings_historical_bronze_sample SET reading_1 = reading_1 * 0.97;
+
+# COMMAND ----------
+
+dbutils.notebook.run("./_update_features", 60, {"database_name":DATABASE_NAME})
 
 # COMMAND ----------
 
@@ -116,6 +124,10 @@ retrain_loop(model_name, DATABASE_NAME, experiment_id, 0.6)
 
 # COMMAND ----------
 
+dbutils.notebook.run("./_update_features", 60, {"database_name":DATABASE_NAME})
+
+# COMMAND ----------
+
 retrain_loop(model_name, DATABASE_NAME, experiment_id, 0.6)
 
 # COMMAND ----------
@@ -129,6 +141,10 @@ retrain_loop(model_name, DATABASE_NAME, experiment_id, 0.6)
 
 # COMMAND ----------
 
+dbutils.notebook.run("./_update_features", 60, {"database_name":DATABASE_NAME})
+
+# COMMAND ----------
+
 retrain_loop(model_name, DATABASE_NAME, experiment_id, 0.6)
 
 # COMMAND ----------
@@ -138,3 +154,7 @@ retrain_loop(model_name, DATABASE_NAME, experiment_id, 0.6)
 # COMMAND ----------
 
 # MAGIC %sql select * from model_performance order by ts
+
+# COMMAND ----------
+
+

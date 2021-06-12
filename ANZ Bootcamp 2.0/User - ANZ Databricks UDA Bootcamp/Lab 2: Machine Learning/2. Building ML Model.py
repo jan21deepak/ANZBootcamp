@@ -16,7 +16,7 @@ print(setup_config)
 
 # COMMAND ----------
 
-display(sql(f'SHOW TABLES IN {DATABASE_NAME}'))
+df = spark.read.table(f"{DATABASE_NAME}.training_data")
 
 # COMMAND ----------
 
@@ -60,7 +60,7 @@ from sklearn.preprocessing import LabelEncoder
 
 # COMMAND ----------
 
-DEFAULT_FEATURES = ['device_type', 'device_id', 'reading_1', 'reading_2', 'reading_3']
+DEFAULT_FEATURES = ['device_type', 'device_id', 'reading_1', 'reading_2', 'reading_3', 'mean_5m_reading_1', 'mean_5m_reading_2', 'mean_5m_reading_3']
 DEFAULT_CATEGORICAL_FEATURES = ['device_type', 'device_id']
 LABEL = 'device_operational_status'
 
@@ -162,18 +162,14 @@ from sklearn.metrics import classification_report
 
 # COMMAND ----------
 
-TABLE_NAME = 'sensor_readings_historical_bronze_sample'
-VERSION = sql(f'describe history {DATABASE_NAME}.{TABLE_NAME} LIMIT 1').collect()[0].version
-
+TABLE_NAME = 'training_data'
 df = spark.sql(f"select * from {DATABASE_NAME}.{TABLE_NAME}")
 display(df)
-
-# COMMAND ----------
 
 df_pd = df.toPandas()
 df_pd = df_pd.sort_values(by='reading_time')
 df_train, df_test = df_pd[:250000], df_pd[250000:]
-version = sql(f'DESCRIBE HISTORY {DATABASE_NAME}.{TABLE_NAME} LIMIT 1').collect()[0].version
+VERSION = sql(f'DESCRIBE HISTORY {DATABASE_NAME}.{TABLE_NAME} LIMIT 1').collect()[0].version
 
 # COMMAND ----------
 
@@ -267,7 +263,7 @@ print(out)
 
 from hyperopt import Trials, hp, fmin, tpe, STATUS_FAIL, STATUS_OK
 
-# This is out search space
+# This is our search space
 params = {
   'n_estimators': hp.choice('n_estimators', [i for i in range(1, 15)]),
   'max_depth': hp.choice('max_depth', [1, 2, 3]),
@@ -298,4 +294,8 @@ best_param = fmin(
 
 # MAGIC %md
 # MAGIC # Step 4: What's next
-# MAGIC Now that we know how to train our models, let's go to the next [notebook]($./2. Model Registry & Deployment) to find out how to deploy them in production
+# MAGIC Now that we know how to train our models, let's go to the next [notebook]($./3. Model Registry & Deployment) to find out how to deploy them in production
+
+# COMMAND ----------
+
+
