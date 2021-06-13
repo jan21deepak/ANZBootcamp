@@ -178,7 +178,7 @@ df_predictions = pd.DataFrame(
   columns=['predictions_worst', 'predictions_best', 'true_labels']
 )
 
-display(df_predictions)
+display(df_predictions.query('predictions_worst != predictions_worst'))
 
 # COMMAND ----------
 
