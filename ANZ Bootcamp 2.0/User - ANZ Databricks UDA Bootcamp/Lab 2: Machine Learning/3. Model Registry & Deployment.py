@@ -42,12 +42,12 @@ displayHTML(f"<h2>Check the experiment at <a href='#mlflow/experiments/{experime
 
 # COMMAND ----------
 
-model_path = #TODO
+model_path = 
 model = mlflow.pyfunc.load_model(model_path)
 
 # COMMAND ----------
 
-df = spark.sql(f'select * from {DATABASE_NAME}.sensor_readings_historical_bronze_sample').toPandas()
+df = spark.sql(f'select * from {DATABASE_NAME}.training_data').toPandas()
 df['device_operation_status_pred'] = model.predict(df)
 preds_stats = df.groupby(['device_operational_status', 'device_operation_status_pred']).count()['id'].reset_index()
 display(preds_stats)
@@ -127,6 +127,8 @@ model = mlflow.pyfunc.load_model(production_model.source)
 
 predictions_worst = model.predict(df)
 
+print(predictions_worst)
+
 # COMMAND ----------
 
 # MAGIC %md ## 3.2 Now let's add best run we had and assign "Production" tag to it automatically
@@ -176,7 +178,7 @@ df_predictions = pd.DataFrame(
   columns=['predictions_worst', 'predictions_best', 'true_labels']
 )
 
-display(df_predictions)
+display(df_predictions.query('predictions_worst != predictions_worst'))
 
 # COMMAND ----------
 
@@ -197,7 +199,7 @@ spark.sql(f'USE {DATABASE_NAME}')
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC select *, sensor_status_model(*) as prediction from sensor_readings_historical_bronze
+# MAGIC select *, sensor_status_model(*) as prediction from training_data
 
 # COMMAND ----------
 
@@ -205,7 +207,7 @@ spark.sql(f'USE {DATABASE_NAME}')
 # MAGIC drop table if exists predictions;
 # MAGIC 
 # MAGIC create temporary view predictions as 
-# MAGIC   select device_operational_status as label, sensor_status_model(*) as prediction from sensor_readings_historical_bronze_sample;
+# MAGIC   select device_operational_status as label, sensor_status_model(*) as prediction from training_data;
 
 # COMMAND ----------
 
@@ -227,7 +229,7 @@ spark.sql(f'USE {DATABASE_NAME}')
 # MAGIC drop table if exists bronze_streaming_cp;
 # MAGIC 
 # MAGIC create table bronze_streaming_cp using delta
-# MAGIC as select * from sensor_readings_historical_bronze limit 1;
+# MAGIC as select * from training_data limit 1;
 # MAGIC 
 # MAGIC select * from bronze_streaming_cp
 
@@ -273,4 +275,8 @@ generate_data(DATABASE_NAME)
 
 # MAGIC %md
 # MAGIC # Step 5. What's next
-# MAGIC Next step is to account for data drift. [This notebook]($./3. Drift Management) will show you how to load models, check for data drift and re-train them if nedeed.
+# MAGIC Next step is to account for data drift. [This notebook]($./4. Drift Management) will show you how to load models, check for data drift and re-train them if nedeed.
+
+# COMMAND ----------
+
+

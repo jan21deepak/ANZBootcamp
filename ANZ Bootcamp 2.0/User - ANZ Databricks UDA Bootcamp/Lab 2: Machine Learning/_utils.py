@@ -89,7 +89,7 @@ def run_setup(username, database, force_restart=False):
 
 def generate_data(database, delay_sec=5, num_batches=10):
   for i in range(num_batches):
-    df = spark.sql(f'select * from {database}.sensor_readings_historical_bronze').sample(False, 0.001).limit(10)
+    df = spark.sql(f'select * from {database}.training_data').sample(False, 0.001).limit(10)
     df.write.format('delta').mode('append').saveAsTable(f'{database}.bronze_streaming_cp')
     time.sleep(delay_sec)
 
@@ -110,7 +110,7 @@ def check_if_need_retrain(model_name, database_name, performance_threshold=0.7):
   model = mlflow.pyfunc.load_model(production_model.source)
   
   # Step 2: Measure performance
-  df = spark.sql(f'select * from {database_name}.sensor_readings_historical_bronze_sample').toPandas()
+  df = spark.sql(f'select * from {database_name}.training_data').toPandas()
   
   preds = model.predict(df)
   
@@ -150,4 +150,26 @@ def promote_to_prod(model_name, run_id):
   client.transition_model_version_stage(name=model_name, version=old_model.version, stage='Archived')
   print('Moved old model to Archived')
   
-  displayHTML(f"<h2>Check your new model <a href='#mlflow/models/sensor_status__yan_moiseev/versions/{new_model.version}'>here</a></h2>")
+  displayHTML(f"<h2>Check your new model <a href='#mlflow/models/{model_name}/versions/{new_model.version}'>here</a></h2>")
+
+# COMMAND ----------
+
+from pyspark.sql.functions import *
+from pyspark.sql import Window
+
+def calculate_window_features(df):
+  aggs = df\
+    .groupBy("device_id", window("reading_time", "5 minutes"))\
+    .agg(
+      mean("reading_1").alias("mean_5m_reading_1"),
+      mean("reading_2").alias("mean_5m_reading_2"),
+      mean("reading_3").alias("mean_5m_reading_3"),
+    )
+
+  features = df.select('id', 'reading_time')\
+    .join(aggs, [df.device_id == aggs.device_id, df.reading_time >= aggs.window.end])\
+    .withColumn("rank", row_number().over(Window.partitionBy(df.id).orderBy(desc(aggs.window.end))))\
+    .filter(col("rank") == 1) \
+    .select("id", "mean_5m_reading_1", "mean_5m_reading_2", "mean_5m_reading_3")
+  
+  return features

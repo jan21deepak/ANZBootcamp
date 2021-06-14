@@ -27,7 +27,7 @@ experiment_id = dbutils.widgets.get('experiment_id')
 
 # COMMAND ----------
 
-table_name = 'sensor_readings_historical_bronze_sample'
+table_name = 'training_data'
 df = spark.sql(f'select * from {database_name}.{table_name}')
 
 version = sql(f'describe history {database_name}.{table_name} LIMIT 1').collect()[0].version
