@@ -42,7 +42,7 @@ displayHTML(f"<h2>Check the experiment at <a href='#mlflow/experiments/{experime
 
 # COMMAND ----------
 
-model_path = #TODO
+model_path = "dbfs:/databricks/mlflow-tracking/3656185596003526/e08ac2a5e88b4414b3c331727f40a4a5/artifacts/model"
 model = mlflow.pyfunc.load_model(model_path)
 
 # COMMAND ----------
@@ -87,7 +87,7 @@ print(best_run)
 from mlflow.tracking import MlflowClient
 client = MlflowClient()
 
-model_name = f'sensor_status__{USERNAME}'
+model_name = f'new_sensor_status__{USERNAME}'
 print(f'Will be using model name: "{model_name}"')
 
 # COMMAND ----------

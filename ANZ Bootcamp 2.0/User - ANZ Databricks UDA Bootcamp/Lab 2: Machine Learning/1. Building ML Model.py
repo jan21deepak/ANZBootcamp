@@ -208,7 +208,7 @@ def run(df_train, df_test, experiment_id, base_model, model_params, run_name='Si
     metrics = _get_metrics(report_dict)
     mlflow.log_metrics(metrics)
     
-    out = report_dict['weighted avg'] 
+    out = report_dict['weighted avg']
     return out
 
 # COMMAND ----------

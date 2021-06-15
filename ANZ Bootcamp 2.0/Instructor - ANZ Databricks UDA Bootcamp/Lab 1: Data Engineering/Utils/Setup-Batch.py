@@ -70,88 +70,163 @@ stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
-process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/50q27gaifx10wqn/historical_sensor_data.csv'],
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
-
-stdout.decode('utf-8'), stderr.decode('utf-8')
-
-# COMMAND ----------
-
-# Copy the downloaded data to DBFS
-
-dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}historical_sensor_data.csv")
-
-dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}historical_sensor_data.csv", f"dbfs:/FileStore/{base_table_path}historical_sensor_data.csv")
-
-# COMMAND ----------
-
-process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/30m8ay9zp4z8uo2/backfill_sensor_data_final.csv'],
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
-
-stdout.decode('utf-8'), stderr.decode('utf-8')
+# MAGIC %scala
+# MAGIC import scala.sys.process._
+# MAGIC 
+# MAGIC val username = spark.conf.get("com.databricks.training.spark.userName").replace('.', '_')
+# MAGIC 
+# MAGIC val base_table_path = "dbfs:/FileStore/" + username + "/deltademoasset/"
+# MAGIC 
+# MAGIC val url = "https://drive.google.com/file/d/1MlvaFVK8zdKMyMCVuBvjmYfjQ5zFy3te/view?usp=sharing"
+# MAGIC 
+# MAGIC val localpath = "/tmp/" + username + "_historical_sensor_data.csv"
+# MAGIC 
+# MAGIC dbutils.fs.mkdirs(base_table_path)
+# MAGIC 
+# MAGIC "wget -O " + localpath + " " + url !!
+# MAGIC 
+# MAGIC dbutils.fs.cp("file:" + localpath, base_table_path)
 
 # COMMAND ----------
 
-# Copy the downloaded data to DBFS
-
-dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}backfill_sensor_data.csv")
-
-dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}backfill_sensor_data_final.csv", f"dbfs:/FileStore/{base_table_path}backfill_sensor_data.csv")
-
-# COMMAND ----------
-
-# MAGIC %sh tail -100 /dbfs/FileStore/demo-deepaksekar/deltademoasset/backfill_sensor_data.csv
+# Only for DropBox
+#process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/50q27gaifx10wqn/historical_sensor_data.csv'],
+#                     stdout=subprocess.PIPE, 
+#                     stderr=subprocess.PIPE)
+#stdout, stderr = process.communicate()
+#
+#stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
-# Download Initial CSV file used in the workshop
-process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/miq89d5oaqz27ct/sensor_readings_current_labeled.csv'],
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
+# Copy the downloaded data to DBFS - Only for Dropbox
 
+#dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}historical_sensor_data.csv")
 
-
-stdout.decode('utf-8'), stderr.decode('utf-8')
+#dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}historical_sensor_data.csv", f"dbfs:/FileStore/{base_table_path}historical_sensor_data.csv")
 
 # COMMAND ----------
 
-# Copy the downloaded data to DBFS
+# Only for Dropbox
 
-dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}sensor_readings_current_labeled.csv")
-
-dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}sensor_readings_current_labeled.csv", f"dbfs:/FileStore/{base_table_path}sensor_readings_current_labeled.csv")
-
-# COMMAND ----------
-
-#dbutils.fs.cp(f"{base_table_path}/sensor_readings_current_labeled.csv", f"dbfs:/FileStore/tables/sensor_readings_current_labeled.csv")
-
-# COMMAND ----------
-
-#Download the Plant dimension data
-
-process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/bt78cb0vpq0x6u4/plant_data.csv'],
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
-
-stdout.decode('utf-8'), stderr.decode('utf-8')
+#process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/30m8ay9zp4z8uo2/backfill_sensor_data_final.csv'],
+#                     stdout=subprocess.PIPE, 
+#                     stderr=subprocess.PIPE)
+#stdout, stderr = process.communicate()
+#
+#stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
-# Copy the downloaded data to DBFS
+# Copy the downloaded data to DBFS - Only for Dropbox
 
-dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}plant_data.csv")
-
-dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}/plant_data.csv", f"dbfs:/FileStore/{base_table_path}plant_data.csv")
+#dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}backfill_sensor_data.csv")
+#
+#dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}backfill_sensor_data_final.csv", f"dbfs:/FileStore/{base_table_path}backfill_sensor_data.csv")
 
 # COMMAND ----------
 
-dataPath1 = f"dbfs:/FileStore/{base_table_path}/plant_data.csv"
+# MAGIC %scala
+# MAGIC import scala.sys.process._
+# MAGIC 
+# MAGIC val username = spark.conf.get("com.databricks.training.spark.userName").replace('.', '_')
+# MAGIC 
+# MAGIC val base_table_path = "dbfs:/FileStore/" + username + "/deltademoasset/"
+# MAGIC 
+# MAGIC val url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ5D4FqrPCBh3Qjr48At9rMKfXewSmaB0EuoyJkT-GfF9SWXFSPBn73OcJWtM14q-fGwhxBzjdxLWEZ/pub?gid=2020573648&single=true&output=csv"
+# MAGIC 
+# MAGIC val localpath = "/tmp/" + username + "_backfill_sensor_data.csv"
+# MAGIC 
+# MAGIC dbutils.fs.mkdirs(base_table_path)
+# MAGIC 
+# MAGIC "wget -O " + localpath + " " + url !!
+# MAGIC 
+# MAGIC dbutils.fs.cp("file:" + localpath, base_table_path)
+
+# COMMAND ----------
+
+# Download Initial CSV file used in the workshop - Only for Dropbox
+#process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/miq89d5oaqz27ct/sensor_readings_current_labeled.csv'],
+#                     stdout=subprocess.PIPE, 
+#                     stderr=subprocess.PIPE)
+#stdout, stderr = process.communicate()
+#
+#
+#
+#stdout.decode('utf-8'), stderr.decode('utf-8')
+
+# COMMAND ----------
+
+# Copy the downloaded data to DBFS - - Only for Dropbox
+
+#dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}sensor_readings_current_labeled.csv")
+#
+#dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}sensor_readings_current_labeled.csv", f"dbfs:/FileStore/{base_table_path}sensor_readings_current_labeled.csv")
+
+# COMMAND ----------
+
+# MAGIC %scala
+# MAGIC import scala.sys.process._
+# MAGIC 
+# MAGIC val username = spark.conf.get("com.databricks.training.spark.userName").replace('.', '_')
+# MAGIC 
+# MAGIC val base_table_path = "dbfs:/FileStore/" + username + "/deltademoasset/"
+# MAGIC 
+# MAGIC val url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQ5uTMt0D05SvbOMuaY8TooD9ZEyaa5FBKj-fPljHCsMHG5LeC1HoPiTvy2Sqyk1KOrrlEABwruvUN/pub?output=csv"
+# MAGIC 
+# MAGIC val localpath = "/tmp/" + username + "_sensor_readings_current_labeled.csv"
+# MAGIC 
+# MAGIC dbutils.fs.mkdirs(base_table_path)
+# MAGIC 
+# MAGIC "wget -O " + localpath + " " + url !!
+# MAGIC 
+# MAGIC dbutils.fs.cp("file:" + localpath, base_table_path)
+
+# COMMAND ----------
+
+#Download the Plant dimension data - For DropBox
+
+#process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/bt78cb0vpq0x6u4/plant_data.csv'],
+#                     stdout=subprocess.PIPE, 
+#                     stderr=subprocess.PIPE)
+#stdout, stderr = process.communicate()
+#
+#stdout.decode('utf-8'), stderr.decode('utf-8')
+
+# COMMAND ----------
+
+# Copy the downloaded data to DBFS - For DropBox
+
+#dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}plant_data.csv")
+#
+#dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}/plant_data.csv", f"dbfs:/FileStore/{base_table_path}plant_data.csv")
+
+# COMMAND ----------
+
+# MAGIC %scala
+# MAGIC import scala.sys.process._
+# MAGIC 
+# MAGIC val username = spark.conf.get("com.databricks.training.spark.userName").replace('.', '_')
+# MAGIC 
+# MAGIC val base_table_path = "dbfs:/FileStore/" + username + "/deltademoasset/"
+# MAGIC 
+# MAGIC val url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_nvpks51QF8D4lJe2rEc4kWr8QyEP-UjmCHUAH_GgHkEVFXgmWVLTSctZ-hYlf4curo3ZVjdpE_5p/pub?gid=1242114572&single=true&output=csv"
+# MAGIC 
+# MAGIC val localpath = "/tmp/" + username + "_plant_data.csv"
+# MAGIC 
+# MAGIC dbutils.fs.mkdirs(base_table_path)
+# MAGIC 
+# MAGIC "wget -O " + localpath + " " + url !!
+# MAGIC 
+# MAGIC dbutils.fs.cp("file:" + localpath, base_table_path)
+
+# COMMAND ----------
+
+# MAGIC %fs ls /FileStore/deepak_sekar/deltademoasset/
+
+# COMMAND ----------
+
+dataPath1 = f"dbfs:/FileStore/{base_table_path}/deepak_sekar_plant_data.csv"
 
 df1 = spark.read\
   .option("header", "true")\

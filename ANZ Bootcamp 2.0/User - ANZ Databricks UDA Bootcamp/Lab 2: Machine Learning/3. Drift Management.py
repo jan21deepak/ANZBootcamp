@@ -39,7 +39,7 @@ sql(f'USE {DATABASE_NAME}')
 from mlflow.tracking import MlflowClient
 client = MlflowClient()
 
-model_name = f'sensor_status__{USERNAME}'
+model_name = f'new_sensor_status__{USERNAME}'
 print(f'Will be using model name: "{model_name}"')
 
 # COMMAND ----------
