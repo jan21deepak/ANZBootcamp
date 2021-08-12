@@ -29,6 +29,16 @@ display(sql(f'SHOW TABLES IN {DATABASE_NAME}'))
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC <img src="https://drive.google.com/uc?export=download&id=1EsfycP1425AZyh6Yu_OOl7AQY1w0Mcs_" width=1012/>
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC <img src="https://drive.google.com/uc?export=download&id=1BZTBBqYwWzUrHF2QdDJdjnpzfGnIXy2F" width=1012/>
+
+# COMMAND ----------
+
 TABLE_NAME = 'sensor_readings_historical_bronze_sample'
 VERSION = sql(f'describe history {DATABASE_NAME}.{TABLE_NAME} LIMIT 1').collect()[0].version
 
@@ -40,6 +50,28 @@ display(df)
 # MAGIC %md 
 # MAGIC 
 # MAGIC Let's create some windowed features on the readings
+
+# COMMAND ----------
+
+from pyspark.sql.functions import *
+from pyspark.sql import Window
+
+def calculate_window_features(df):
+  aggs = df\
+    .groupBy("device_id", window("reading_time", "5 minutes"))\
+    .agg(
+      mean("reading_1").alias("mean_5m_reading_1"),
+      mean("reading_2").alias("mean_5m_reading_2"),
+      mean("reading_3").alias("mean_5m_reading_3"),
+    )
+
+  features = df.select('id', 'reading_time')\
+    .join(aggs, [df.device_id == aggs.device_id, df.reading_time >= aggs.window.end])\
+    .withColumn("rank", row_number().over(Window.partitionBy(df.id).orderBy(desc(aggs.window.end))))\
+    .filter(col("rank") == 1) \
+    .select("id", "mean_5m_reading_1", "mean_5m_reading_2", "mean_5m_reading_3")
+  
+  return features
 
 # COMMAND ----------
 
@@ -123,7 +155,3 @@ display(training_df.orderBy("id"))
 # MAGIC %md
 # MAGIC # Step 3: What's next
 # MAGIC Now that we have learnt how to use the feature store, we can go start [building ML models]($./2. Building ML Model)
-
-# COMMAND ----------
-
-

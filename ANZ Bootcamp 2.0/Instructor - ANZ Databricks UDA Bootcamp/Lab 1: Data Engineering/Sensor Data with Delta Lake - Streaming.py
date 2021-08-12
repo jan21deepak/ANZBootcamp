@@ -320,10 +320,13 @@ while(next_row < 12000):
 # COMMAND ----------
 
 # MAGIC %scala
-# MAGIC /*
+# MAGIC 
 # MAGIC if (spark.streams.active.length > 0) {
 # MAGIC   println("\nStopping All Active Queries...")
 # MAGIC   for (s <- spark.streams.active) 
 # MAGIC     s.stop
 # MAGIC }
-# MAGIC */
+
+# COMMAND ----------
+
+

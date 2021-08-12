@@ -21,6 +21,17 @@ df = spark.read.table(f"{DATABASE_NAME}.training_data")
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC # AutoML
+# MAGIC ![mlflow-overview](https://media-exp3.licdn.com/dms/image/C5612AQE80XhiruH6FA/article-inline_image-shrink_1000_1488/0/1558412666884?e=1630540800&v=beta&t=UPSZOEAJ9rz2Dt9slNQvOVCZBZGIFIW_xDGEWVV8JrI)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #OR
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # Step 1: Create an Experiment
 # MAGIC Here we are creating a Machine Learning experiment through an `mlflow.create_experiment` API call. [Link to docs to learn more](https://www.mlflow.org/docs/latest/python_api/mlflow.html#mlflow.create_experiment).
 # MAGIC 
@@ -31,7 +42,7 @@ df = spark.read.table(f"{DATABASE_NAME}.training_data")
 
 # COMMAND ----------
 
-experiment_config = get_or_create_experiment(PROJECT_PATH, 'Plant Status Prediction')
+experiment_config = get_or_create_experiment(PROJECT_PATH, 'Plant Status Prediction1')
 experiment_path = experiment_config['experiment_path']
 experiment_id = experiment_config['experiment_id']
 
@@ -186,6 +197,9 @@ def run(df_train, df_test, experiment_id, base_model, model_params, run_name='Si
     mlflow.log_param('source_table', TABLE_NAME)
     mlflow.log_param('source_database', DATABASE_NAME)
     mlflow.log_params(model_params)
+    
+    #or
+    #mlflow.spark.autolog()
 
     model = BaseModel(model_cls=base_model, model_params=model_params, table_columns=df.columns)
     model = model.fit(df_train[DEFAULT_FEATURES], df_train[LABEL])
@@ -295,7 +309,3 @@ best_param = fmin(
 # MAGIC %md
 # MAGIC # Step 4: What's next
 # MAGIC Now that we know how to train our models, let's go to the next [notebook]($./3. Model Registry & Deployment) to find out how to deploy them in production
-
-# COMMAND ----------
-
-

@@ -12,5 +12,11 @@
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC # Databricks ML Platform
+# MAGIC ![mlflow-overview](https://databricks.com/wp-content/uploads/2021/05/lakehouse-architecture-1-1.png)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # 2 MLFlow Process Flow overview
 # MAGIC ![mlflow-overview](https://databricks.com/wp-content/uploads/2020/04/databricks-adds-access-control-to-mlflow-model-registry_01.jpg)

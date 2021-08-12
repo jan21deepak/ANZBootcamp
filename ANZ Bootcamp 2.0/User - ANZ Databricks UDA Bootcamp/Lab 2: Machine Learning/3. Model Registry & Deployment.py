@@ -24,7 +24,7 @@ print(setup_config)
 
 # COMMAND ----------
 
-experiment_config = get_or_create_experiment(PROJECT_PATH, 'Plant Status Prediction')
+experiment_config = get_or_create_experiment(PROJECT_PATH, 'Plant Status Prediction1')
 experiment_path = experiment_config['experiment_path']
 experiment_id = experiment_config['experiment_id']
 
@@ -97,41 +97,7 @@ displayHTML(f"<h2>Check the model at <a href='#mlflow/models/{model_name}'>#mlfl
 
 # COMMAND ----------
 
-# MAGIC %md ## 3.1 Register worst model as version 1
-
-# COMMAND ----------
-
-# Now push worst model run to it 
-worst_run = mlflow.search_runs(experiment_ids=[experiment_id], order_by=['metrics.macro_avg__f1_score asc']).iloc[0]
-print('Our worst run is:')
-print(f'\trun_id={worst_run["run_id"]}')
-print(f'\tf1_score={worst_run["metrics.macro_avg__f1_score"]}')
-
-mlflow.register_model(
-    f'runs:/{worst_run["run_id"]}/model', model_name
-)
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC Now go ahead and observe the model in the Model Registry:
-# MAGIC - Click "Models" on the left sidebar
-# MAGIC - Find your Model (if your username is "yan_moiseev", you should see it as `sensor_status__yan_moiseev`)
-# MAGIC - Click on "Version 1"
-# MAGIC - Click on "Stage", transition it to "Production"
-
-# COMMAND ----------
-
-production_model = client.get_latest_versions(model_name, ['Production'])[0]
-model = mlflow.pyfunc.load_model(production_model.source)
-
-predictions_worst = model.predict(df)
-
-print(predictions_worst)
-
-# COMMAND ----------
-
-# MAGIC %md ## 3.2 Now let's add best run we had and assign "Production" tag to it automatically
+# MAGIC %md ## 3.2 Register your best model
 
 # COMMAND ----------
 
@@ -147,8 +113,8 @@ mlflow.register_model(
 
 # COMMAND ----------
 
-client.transition_model_version_stage(name=model_name, version=2, stage='Production')
-client.transition_model_version_stage(name=model_name, version=1, stage='Archived')
+client.transition_model_version_stage(name=model_name, version=3, stage='Production')
+client.transition_model_version_stage(name=model_name, version=2, stage='Archived')
 
 # COMMAND ----------
 
