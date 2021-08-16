@@ -16,6 +16,7 @@
 databaseName = spark.conf.get("com.databricks.training.spark.dbName")
 userName = spark.conf.get("com.databricks.training.spark.userName").replace('.', '_')
 displayHTML("""User name is <b style="color:green">{}</b>.""".format(userName))
+displayHTML("""Database name is <b style="color:green">{}</b>.""".format(databaseName))
 
 # COMMAND ----------
 
@@ -35,8 +36,9 @@ db_name = spark.conf.get("com.databricks.training.spark.dbName")
 #username_replaced = username.replace(".", "_").replace("@","_")
 username = spark.conf.get("com.databricks.training.spark.userName").replace('.', '_')
 #username = dbutils.widgets.get("user_name")
-base_table_path = f"{username}/deltademoasset/"
-local_data_path = f"{username}/deltademoasset/"
+
+base_table_path = f"dbfs:/FileStore/{username}/bootcamp_data/"
+local_data_path = f"{username}_bootcamp_data/"
 
 
 # Construct the unique database name
@@ -80,78 +82,109 @@ stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
-process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/50q27gaifx10wqn/historical_sensor_data.csv'],
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
+import pickle
+import os
+import re
+import io
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.http import MediaIoBaseDownload
+import requests
+from tqdm import tqdm
 
-stdout.decode('utf-8'), stderr.decode('utf-8')
+username = spark.conf.get("com.databricks.training.spark.userName").replace('.', '_')
 
-# COMMAND ----------
+def download_file_from_google_drive(id, destination):
+    def get_confirm_token(response):
+        for key, value in response.cookies.items():
+            if key.startswith('download_warning'):
+                return value
+        return None
 
-# Copy the downloaded data to DBFS
+    def save_response_content(response, destination):
+        CHUNK_SIZE = 32768
+        # get the file size from Content-length response header
+        file_size = int(response.headers.get("Content-Length", 0))
+        # extract Content disposition from response headers
+        content_disposition = response.headers.get("content-disposition")
+        # parse filename
+        filename = re.findall("filename=\"(.+)\"", content_disposition)[0]
+        print("[+] File size:", file_size)
+        print("[+] File name:", filename)
+        progress = tqdm(response.iter_content(CHUNK_SIZE), f"Downloading {filename}", total=file_size, unit="Byte", unit_scale=True, unit_divisor=1024)
+        with open(destination, "wb") as f:
+            for chunk in progress:
+                if chunk: # filter out keep-alive new chunks
+                    f.write(chunk)
+                    # update the progress bar
+                    progress.update(len(chunk))
+        progress.close()
 
-dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}historical_sensor_data.csv")
+    # base URL for download
+    URL = "https://docs.google.com/uc?export=download"
+    # init a HTTP session
+    session = requests.Session()
+    # make a request
+    response = session.get(URL, params = {'id': id}, stream=True)
+    print("[+] Downloading", response.url)
+    # get confirmation token
+    token = get_confirm_token(response)
+    if token:
+        params = {'id': id, 'confirm':token}
+        response = session.get(URL, params=params, stream=True)
+    # download to disk
+    save_response_content(response, destination)  
 
-dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}historical_sensor_data.csv", f"dbfs:/FileStore/{base_table_path}historical_sensor_data.csv")
-
-# COMMAND ----------
-
-process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/30m8ay9zp4z8uo2/backfill_sensor_data_final.csv'],
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
-
-stdout.decode('utf-8'), stderr.decode('utf-8')
-
-# COMMAND ----------
-
-# Copy the downloaded data to DBFS
-
-dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}backfill_sensor_data.csv")
-
-dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}backfill_sensor_data_final.csv", f"dbfs:/FileStore/{base_table_path}backfill_sensor_data.csv")
-
-# COMMAND ----------
-
-# Download Initial CSV file used in the workshop
-process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/miq89d5oaqz27ct/sensor_readings_current_labeled.csv'],
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
-
-stdout.decode('utf-8'), stderr.decode('utf-8')
-
-# COMMAND ----------
-
-# Copy the downloaded data to DBFS
-
-dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}sensor_readings_current_labeled.csv")
-
-dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}sensor_readings_current_labeled.csv", f"dbfs:/FileStore/{base_table_path}sensor_readings_current_labeled.csv")
-
-# COMMAND ----------
-
-#Download the Plant dimension data
-
-process = subprocess.Popen(['wget', '-P', local_data_path, 'https://www.dropbox.com/s/bt78cb0vpq0x6u4/plant_data.csv'],
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
-
-stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
-# Copy the downloaded data to DBFS
+### Historical Sensor data
 
-dbutils.fs.rm(f"dbfs:/FileStore/{base_table_path}plant_data.csv")
+local_file_his = local_data_path + "historical_sensor_data.csv"
 
-dbutils.fs.cp(f"file:/databricks/driver/{local_data_path}/plant_data.csv", f"dbfs:/FileStore/{base_table_path}plant_data.csv")
+download_file_from_google_drive("17ph7fNX8Wua9rAsAnmN87vf_Ikp9DPUJ", local_file_his)
+
+
+dbutils.fs.cp(f"file:/databricks/driver/{local_file_his}", f"{base_table_path}historical_sensor_data.csv")
 
 # COMMAND ----------
 
-dataPath1 = f"dbfs:/FileStore/{base_table_path}/plant_data.csv"
+# MAGIC %fs ls dbfs:/FileStore/db/bootcamp_data
+
+# COMMAND ----------
+
+### Backfill Sensor data
+
+local_file_bf = local_data_path + "backfill_sensor_data_final.csv"
+
+download_file_from_google_drive("1jGE_vm7JVAA0gvXvJx3hheI5Ztoz2qMG", local_file_bf)
+
+dbutils.fs.cp(f"file:/databricks/driver/{local_file_bf}", f"{base_table_path}backfill_sensor_data_final.csv")
+
+# COMMAND ----------
+
+### Current Labelled Sensor data
+
+local_file_cl = local_data_path + "sensor_readings_current_labeled.csv"
+
+download_file_from_google_drive("1Ed9CHIELEJHJVIMfML8ytQicaRLlKuYh", local_file_cl)
+
+dbutils.fs.cp(f"file:/databricks/driver/{local_file_cl}", f"{base_table_path}sensor_readings_current_labeled.csv")
+
+# COMMAND ----------
+
+### Plant Data
+
+local_file_pd = local_data_path + "plant_data.csv"
+
+download_file_from_google_drive("1eMB5wy1wa9hh1qgk_pEwvOICn367UdfJ", local_file_pd)
+
+dbutils.fs.cp(f"file:/databricks/driver/{local_file_pd}", f"{base_table_path}plant_data.csv")
+
+# COMMAND ----------
+
+dataPath1 = f"{base_table_path}/plant_data.csv"
 
 df1 = spark.read\
   .option("header", "true")\
@@ -186,24 +219,28 @@ response = local_data_path + " " + base_table_path + " " + database_name
 
 # COMMAND ----------
 
+response
+
+# COMMAND ----------
+
 setup_responses=response.split()
 dbfs_data_path = setup_responses[1]
 database_name = setup_responses[2]
-bronze_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/bronze"
-silver_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/silver"
-silver_clone_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/silver_clone"
-silver_constraints_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/silver_constraints"
-gold_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/gold"
-parquet_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/parquet"
+bronze_table_path = f"{dbfs_data_path}tables/bronze"
+silver_table_path = f"{dbfs_data_path}tables/silver"
+silver_clone_table_path = f"{dbfs_data_path}tables/silver_clone"
+silver_constraints_table_path = f"{dbfs_data_path}tables/silver_constraints"
+gold_table_path = f"{dbfs_data_path}tables/gold"
+parquet_table_path = f"{dbfs_data_path}tables/parquet"
 dbutils.fs.rm(bronze_table_path, recurse=True)
 dbutils.fs.rm(silver_table_path, recurse=True)
 dbutils.fs.rm(gold_table_path, recurse=True)
 dbutils.fs.rm(parquet_table_path, recurse=True)
 dbutils.fs.rm(silver_clone_table_path, recurse=True)
 
-streaming_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/streaming"
-output_sink_path = f"dbfs:/FileStore/{dbfs_data_path}tables/streaming_output"
-checkpoint_stream1_path = f"dbfs:/FileStore/demo-{username}/deltademoasset/checkpoint_stream1/"
+streaming_table_path = f"{dbfs_data_path}tables/streaming"
+output_sink_path = f"{dbfs_data_path}tables/streaming_output"
+checkpoint_stream1_path = f"dbfs:/FileStore/{username}/checkpoint_stream1/"
 
 dbutils.fs.rm(streaming_table_path, recurse=True)
 dbutils.fs.rm(checkpoint_stream1_path, recurse=True)
@@ -236,7 +273,7 @@ spark.sql(f"USE {database_name}")
 
 # COMMAND ----------
 
-dataPath = f"dbfs:/FileStore/{dbfs_data_path}historical_sensor_data.csv"
+dataPath = f"{dbfs_data_path}historical_sensor_data.csv"
 
 df = spark.read\
   .option("header", "true")\
@@ -249,21 +286,6 @@ df = spark.read\
 # COMMAND ----------
 
 df.createOrReplaceTempView("bronze_readings_view")
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC -- select * from bronze_readings_view
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC -- select count(*) from bronze_readings_view
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC -- select distinct(device_operational_status) from bronze_readings_view
 
 # COMMAND ----------
 
@@ -296,7 +318,7 @@ spark.sql(f"CREATE TABLE if not exists sensor_readings_historical_silver USING D
 
 # COMMAND ----------
 
-dataPath = f"dbfs:/FileStore/{dbfs_data_path}backfill_sensor_data.csv"
+dataPath = f"{dbfs_data_path}backfill_sensor_data.csv"
 
 df = spark.read\
   .option("header", "true")\
@@ -489,7 +511,7 @@ df.createOrReplaceTempView("input_vw")
 
 # COMMAND ----------
 
-dataPath = f"dbfs:/FileStore/{dbfs_data_path}/sensor_readings_current_labeled.csv"
+dataPath = f"{dbfs_data_path}/sensor_readings_current_labeled.csv"
 
 df = spark.read\
   .option("header", "true")\
