@@ -11,9 +11,11 @@ db_name = spark.conf.get("com.databricks.training.spark.dbName")
 #username = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 #username_replaced = username.replace(".", "_").replace("@","_")
 username = spark.conf.get("com.databricks.training.spark.userName").replace('.', '_')
-base_table_path = f"{username}/deltademoasset/"
-local_data_path = f"{username}/deltademoasset/"
-checkpoint_stream1_path = f"dbfs:/FileStore/demo-{username}/deltademoasset/checkpoint_stream1/"
+
+base_table_path = f"dbfs:/FileStore/{username}/bootcamp_data/"
+local_data_path = f"{username}_bootcamp_data/"
+
+checkpoint_stream1_path = f"dbfs:/FileStore/{username}/checkpoint_stream1/"
 
 # Construct the unique database name
 database_name = db_name
@@ -38,7 +40,11 @@ spark.sql(f"USE {database_name}")
 
 # COMMAND ----------
 
-dataPath = f"dbfs:/FileStore/{base_table_path}sensor_readings_current_labeled.csv"
+display(dbutils.fs.ls(f"{base_table_path}"))
+
+# COMMAND ----------
+
+dataPath = f"{base_table_path}sensor_readings_current_labeled.csv"
 
 df = spark.read\
   .option("header", "true")\
