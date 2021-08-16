@@ -14,16 +14,16 @@
 
 # COMMAND ----------
 
-setup_responses = dbutils.notebook.run("./Utils/Setup-Batch", 0).split()
+setup_responses = dbutils.notebook.run("./Utils/Setup-Batch-GDrive", 0).split()
 
 dbfs_data_path = setup_responses[1]
 database_name = setup_responses[2]
-bronze_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/bronze"
-silver_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/silver"
-silver_clone_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/silver_clone"
-silver_constraints_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/silver_constraints"
-gold_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/gold"
-parquet_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/parquet"
+bronze_table_path = f"{dbfs_data_path}tables/bronze"
+silver_table_path = f"{dbfs_data_path}tables/silver"
+silver_clone_table_path = f"{dbfs_data_path}tables/silver_clone"
+silver_constraints_table_path = f"{dbfs_data_path}tables/silver_constraints"
+gold_table_path = f"{dbfs_data_path}tables/gold"
+parquet_table_path = f"{dbfs_data_path}tables/parquet"
 dbutils.fs.rm(bronze_table_path, recurse=True)
 dbutils.fs.rm(silver_table_path, recurse=True)
 dbutils.fs.rm(gold_table_path, recurse=True)
@@ -53,7 +53,7 @@ spark.sql(f"USE {database_name}")
 
 # COMMAND ----------
 
-dataPath = f"dbfs:/FileStore/{dbfs_data_path}historical_sensor_data.csv"
+dataPath = f"{dbfs_data_path}historical_sensor_data.csv"
 
 df = spark.read\
   .option("header", "true")\
@@ -190,7 +190,7 @@ spark.sql(f"CREATE TABLE if not exists sensor_readings_historical_silver USING D
 
 # COMMAND ----------
 
-dataPath = f"dbfs:/FileStore/{dbfs_data_path}backfill_sensor_data.csv"
+dataPath = f"{dbfs_data_path}backfill_sensor_data.csv"
 
 df = spark.read\
   .option("header", "true")\
@@ -428,7 +428,7 @@ spark.sql(f"CREATE TABLE sensor_readings_historical_silver_with_constraints (id 
 # Load new DataFrame based on current Delta table
 df_1 = sql("SELECT * FROM sensor_readings_historical_silver")
 
-parquet_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/parquet"
+parquet_table_path = f"{dbfs_data_path}tables/parquet"
 
 # Save DataFrame to Parquet
 df_1.write.mode("overwrite").parquet(parquet_table_path)
