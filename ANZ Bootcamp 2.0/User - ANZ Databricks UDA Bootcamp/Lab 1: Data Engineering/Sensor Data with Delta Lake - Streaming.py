@@ -4,13 +4,13 @@
 
 # COMMAND ----------
 
-setup_responses = dbutils.notebook.run("./Utils/Setup-Streaming", 0).split()
+setup_responses = dbutils.notebook.run("./Utils/Setup-Streaming-GDrive", 0).split()
 
 checkpoint_stream1_path = setup_responses[0]
 dbfs_data_path = setup_responses[1]
 database_name = setup_responses[2]
-streaming_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/streaming"
-output_sink_path = f"dbfs:/FileStore/{dbfs_data_path}tables/streaming_output"
+streaming_table_path = f"{dbfs_data_path}tables/streaming"
+output_sink_path = f"{dbfs_data_path}tables/streaming_output"
 
 dbutils.fs.rm(streaming_table_path, recurse=True)
 dbutils.fs.rm(checkpoint_stream1_path, recurse=True)
@@ -61,7 +61,7 @@ spark.sql(f"USE {database_name}")
 
 # COMMAND ----------
 
-dataPath = f"dbfs:/FileStore/{dbfs_data_path}/sensor_readings_current_labeled.csv"
+dataPath = f"{dbfs_data_path}/sensor_readings_current_labeled.csv"
 
 df = spark.read\
   .option("header", "true")\
