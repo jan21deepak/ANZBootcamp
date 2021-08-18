@@ -64,7 +64,7 @@ def run_setup(username, database, force_restart=False):
     dbutils.fs.rm(silver_table_path, recurse=True)
     dbutils.fs.rm(gold_table_path, recurse=True)
     
-    dataPath = f"dbfs:/FileStore/{dbfs_data_path}historical_sensor_data.csv"
+    dataPath = f"{dbfs_data_path}historical_sensor_data.csv"
     
     df = spark.read\
       .option("header", "true").option("delimiter", ",").option("inferSchema", "true").csv(dataPath)
