@@ -53,12 +53,12 @@ def run_setup(username, database, force_restart=False):
   if (database_exists and bronze_exists) and not force_restart:
     pass
   else:
-    setup_responses = dbutils.notebook.run("../Lab 1: Data Engineering/Utils/Setup-Batch", 0, {"db_name": username}).split()
+    setup_responses = dbutils.notebook.run("../Lab 1: Data Engineering/Utils/Setup-Batch-GDrive", 0, {"db_name": username}).split()
     dbfs_data_path = setup_responses[1]
     
-    bronze_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/bronze"
-    silver_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/silver"
-    gold_table_path = f"dbfs:/FileStore/{dbfs_data_path}tables/gold"
+    bronze_table_path = f"{dbfs_data_path}tables/bronze"
+    silver_table_path = f"{dbfs_data_path}tables/silver"
+    gold_table_path = f"{dbfs_data_path}tables/gold"
     
     dbutils.fs.rm(bronze_table_path, recurse=True)
     dbutils.fs.rm(silver_table_path, recurse=True)
