@@ -190,7 +190,7 @@ spark.sql(f"CREATE TABLE if not exists sensor_readings_historical_silver USING D
 
 # COMMAND ----------
 
-dataPath = f"{dbfs_data_path}backfill_sensor_data.csv"
+dataPath = f"{dbfs_data_path}backfill_sensor_data_final.csv"
 
 df = spark.read\
   .option("header", "true")\
