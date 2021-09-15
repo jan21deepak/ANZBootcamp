@@ -82,6 +82,7 @@ stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
+!pip install --upgrade google-api-python-client
 import pickle
 import os
 import re
@@ -318,7 +319,7 @@ spark.sql(f"CREATE TABLE if not exists sensor_readings_historical_silver USING D
 
 # COMMAND ----------
 
-dataPath = f"{dbfs_data_path}backfill_sensor_data.csv"
+dataPath = f"{dbfs_data_path}backfill_sensor_data_final.csv"
 
 df = spark.read\
   .option("header", "true")\
