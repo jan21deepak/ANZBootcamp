@@ -21,9 +21,11 @@ database_name = setup_responses[2]
 bronze_table_path = f"{dbfs_data_path}tables/bronze"
 silver_table_path = f"{dbfs_data_path}tables/silver"
 silver_clone_table_path = f"{dbfs_data_path}tables/silver_clone"
+silver_sh_clone_table_path = f"{dbfs_data_path}tables/silver_clone_shallow"
 silver_constraints_table_path = f"{dbfs_data_path}tables/silver_constraints"
 gold_table_path = f"{dbfs_data_path}tables/gold"
 parquet_table_path = f"{dbfs_data_path}tables/parquet"
+autoloader_ingest_path = f"{dbfs_data_path}/autoloader_ingest/"
 dbutils.fs.rm(bronze_table_path, recurse=True)
 dbutils.fs.rm(silver_table_path, recurse=True)
 dbutils.fs.rm(gold_table_path, recurse=True)
@@ -520,6 +522,18 @@ spark.sql(f"CREATE TABLE IF NOT EXISTS sensor_readings_historical_silver_clone D
 
 # COMMAND ----------
 
+dbutils.fs.ls(f'{silver_clone_table_path}')
+
+# COMMAND ----------
+
+spark.sql(f"CREATE TABLE IF NOT EXISTS sensor_readings_historical_silver_clone_shallow SHALLOW CLONE sensor_readings_historical_silver VERSION AS OF 1 LOCATION '{silver_sh_clone_table_path}'")
+
+# COMMAND ----------
+
+dbutils.fs.ls(f'{silver_sh_clone_table_path}')
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ##![Delta Lake Logo Tiny](https://pages.databricks.com/rs/094-YMS-629/images/delta-lake-tiny-logo.png) Schema Evolution
 # MAGIC With the `mergeSchema` option, you can evolve your Delta Lake table schema
@@ -586,6 +600,80 @@ tmp_df.write.option("mergeSchema","true").format("delta").mode("append").save(si
 # MAGIC SELECT device_id, count(*) AS count FROM sensor_readings_historical_silver VERSION AS OF 1
 # MAGIC GROUP BY device_id
 # MAGIC ORDER BY count ASC 
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Performance Benefits
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### Reading CSV
+
+# COMMAND ----------
+
+dataPath = f"{dbfs_data_path}historical_sensor_data.csv"
+
+df = spark.read\
+  .option("header", "true")\
+  .option("delimiter", ",")\
+  .option("inferSchema", "true")\
+  .csv(dataPath)
+
+display(df)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #####Reading parquet
+
+# COMMAND ----------
+
+df = spark.read.parquet(parquet_table_path)
+display(df)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### Reading Delta
+
+# COMMAND ----------
+
+df = spark.read.option("format", "delta").load(bronze_table_path)
+display(df)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM sensor_readings_historical_bronze WHERE device_id = '7G007R' AND device_operational_status != 'NOMINAL'
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC OPTIMIZE sensor_readings_historical_bronze ZORDER BY (device_id, device_operational_status)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM sensor_readings_historical_bronze WHERE device_id = '7G007R' AND device_operational_status != 'NOMINAL'
+
+# COMMAND ----------
+
+dbutils.fs.ls(bronze_table_path)
+
+# COMMAND ----------
+
+spark.conf.set("spark.databricks.delta.retentionDurationCheck.enabled", "false")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC VACUUM sensor_readings_historical_bronze RETAIN 0 HOURS 
+
+# COMMAND ----------
+
+dbutils.fs.ls(bronze_table_path)
 
 # COMMAND ----------
 

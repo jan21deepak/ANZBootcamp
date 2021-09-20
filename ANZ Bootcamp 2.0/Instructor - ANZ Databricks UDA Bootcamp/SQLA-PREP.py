@@ -466,7 +466,7 @@ tmp_df.write.option("mergeSchema","true").format("delta").mode("append").save(si
 
 # COMMAND ----------
 
-dataPath = f"dbfs:/FileStore/{base_table_path}sensor_readings_current_labeled.csv"
+dataPath = f"{base_table_path}sensor_readings_current_labeled.csv"
 
 df = spark.read\
   .option("header", "true")\

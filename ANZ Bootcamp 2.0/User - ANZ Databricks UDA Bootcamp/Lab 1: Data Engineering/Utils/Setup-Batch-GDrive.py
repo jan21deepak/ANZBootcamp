@@ -209,7 +209,3 @@ df1.createOrReplaceTempView("plant_vw")
 response = local_data_path + " " + base_table_path + " " + database_name
 
 dbutils.notebook.exit(response)
-
-# COMMAND ----------
-
-
