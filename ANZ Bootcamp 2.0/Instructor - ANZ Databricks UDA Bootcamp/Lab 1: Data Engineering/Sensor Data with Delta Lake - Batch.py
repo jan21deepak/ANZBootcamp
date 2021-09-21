@@ -21,9 +21,12 @@ database_name = setup_responses[2]
 bronze_table_path = f"{dbfs_data_path}tables/bronze"
 silver_table_path = f"{dbfs_data_path}tables/silver"
 silver_clone_table_path = f"{dbfs_data_path}tables/silver_clone"
+silver_sh_clone_table_path = f"{dbfs_data_path}tables/silver_clone_shallow"
 silver_constraints_table_path = f"{dbfs_data_path}tables/silver_constraints"
 gold_table_path = f"{dbfs_data_path}tables/gold"
+gold_agg_table_path = f"{dbfs_data_path}tables/goldagg"
 parquet_table_path = f"{dbfs_data_path}tables/parquet"
+autoloader_ingest_path = f"{dbfs_data_path}/autoloader_ingest/"
 dbutils.fs.rm(bronze_table_path, recurse=True)
 dbutils.fs.rm(silver_table_path, recurse=True)
 dbutils.fs.rm(gold_table_path, recurse=True)
@@ -520,6 +523,18 @@ spark.sql(f"CREATE TABLE IF NOT EXISTS sensor_readings_historical_silver_clone D
 
 # COMMAND ----------
 
+dbutils.fs.ls(f'{silver_clone_table_path}')
+
+# COMMAND ----------
+
+spark.sql(f"CREATE TABLE IF NOT EXISTS sensor_readings_historical_silver_clone_shallow SHALLOW CLONE sensor_readings_historical_silver VERSION AS OF 1 LOCATION '{silver_sh_clone_table_path}'")
+
+# COMMAND ----------
+
+dbutils.fs.ls(f'{silver_sh_clone_table_path}')
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ##![Delta Lake Logo Tiny](https://pages.databricks.com/rs/094-YMS-629/images/delta-lake-tiny-logo.png) Schema Evolution
 # MAGIC With the `mergeSchema` option, you can evolve your Delta Lake table schema
@@ -590,6 +605,80 @@ tmp_df.write.option("mergeSchema","true").format("delta").mode("append").save(si
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Performance Benefits
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### Reading CSV
+
+# COMMAND ----------
+
+dataPath = f"{dbfs_data_path}historical_sensor_data.csv"
+
+df = spark.read\
+  .option("header", "true")\
+  .option("delimiter", ",")\
+  .option("inferSchema", "true")\
+  .csv(dataPath)
+
+display(df)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #####Reading parquet
+
+# COMMAND ----------
+
+df = spark.read.parquet(parquet_table_path)
+display(df)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### Reading Delta
+
+# COMMAND ----------
+
+df = spark.read.option("format", "delta").load(bronze_table_path)
+display(df)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM sensor_readings_historical_bronze WHERE device_id = '7G007R' AND device_operational_status != 'NOMINAL'
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC OPTIMIZE sensor_readings_historical_bronze ZORDER BY (device_id, device_operational_status)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM sensor_readings_historical_bronze WHERE device_id = '7G007R' AND device_operational_status != 'NOMINAL'
+
+# COMMAND ----------
+
+dbutils.fs.ls(bronze_table_path)
+
+# COMMAND ----------
+
+spark.conf.set("spark.databricks.delta.retentionDurationCheck.enabled", "false")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC VACUUM sensor_readings_historical_bronze RETAIN 0 HOURS 
+
+# COMMAND ----------
+
+dbutils.fs.ls(bronze_table_path)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### ![Delta Lake Tiny Logo](https://pages.databricks.com/rs/094-YMS-629/images/delta-lake-tiny-logo.png) Create Gold table
 # MAGIC Now that our Silver table has been cleaned and conformed, and we've evolved the schema, the next step is to create a Gold table. Gold tables are often created to provide clean, reliable data for a specific business unit or use case.
 # MAGIC 
@@ -642,11 +731,11 @@ tmp_df.write.option("mergeSchema","true").format("delta").mode("append").save(si
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC CREATE TABLE sensor_readings_gold
-# MAGIC USING delta
-# MAGIC AS SELECT *
-# MAGIC FROM sensor_readings_historical_gold_view
+spark.sql(f"CREATE TABLE if not exists sensor_readings_gold USING DELTA LOCATION '{gold_table_path}' AS SELECT * FROM sensor_readings_historical_gold_view")
+
+# COMMAND ----------
+
+spark.sql(f"CREATE TABLE if not exists sensor_readings_gold_agg USING DELTA LOCATION '{gold_agg_table_path}' AS Select plant_id, plant_type, device_type, device_operational_status, count(*) as count from sensor_readings_historical_gold_view group by plant_id, plant_type, device_type, device_operational_status")
 
 # COMMAND ----------
 

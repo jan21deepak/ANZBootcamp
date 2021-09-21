@@ -24,6 +24,7 @@ silver_clone_table_path = f"{dbfs_data_path}tables/silver_clone"
 silver_sh_clone_table_path = f"{dbfs_data_path}tables/silver_clone_shallow"
 silver_constraints_table_path = f"{dbfs_data_path}tables/silver_constraints"
 gold_table_path = f"{dbfs_data_path}tables/gold"
+gold_agg_table_path = f"{dbfs_data_path}tables/goldagg"
 parquet_table_path = f"{dbfs_data_path}tables/parquet"
 autoloader_ingest_path = f"{dbfs_data_path}/autoloader_ingest/"
 dbutils.fs.rm(bronze_table_path, recurse=True)
@@ -730,11 +731,11 @@ dbutils.fs.ls(bronze_table_path)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC CREATE TABLE sensor_readings_gold
-# MAGIC USING delta
-# MAGIC AS SELECT *
-# MAGIC FROM sensor_readings_historical_gold_view
+spark.sql(f"CREATE TABLE if not exists sensor_readings_gold USING DELTA LOCATION '{gold_table_path}' AS SELECT * FROM sensor_readings_historical_gold_view")
+
+# COMMAND ----------
+
+spark.sql(f"CREATE TABLE if not exists sensor_readings_gold_agg USING DELTA LOCATION '{gold_agg_table_path}' AS Select plant_id, plant_type, device_type, device_operational_status, count(*) as count from sensor_readings_historical_gold_view group by plant_id, plant_type, device_type, device_operational_status")
 
 # COMMAND ----------
 
