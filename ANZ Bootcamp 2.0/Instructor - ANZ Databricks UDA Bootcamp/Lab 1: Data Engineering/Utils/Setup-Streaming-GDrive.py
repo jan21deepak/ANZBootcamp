@@ -13,7 +13,7 @@ db_name = spark.conf.get("com.databricks.training.spark.dbName")
 username = spark.conf.get("com.databricks.training.spark.userName").replace('.', '_')
 
 base_table_path = f"dbfs:/FileStore/{username}/bootcamp_data/"
-local_data_path = f"{username}_bootcamp_data/"
+local_data_path = f"/dbfs/FileStore/{username}/bootcamp_data/"
 
 checkpoint_stream1_path = f"dbfs:/FileStore/{username}/checkpoint_stream1/"
 

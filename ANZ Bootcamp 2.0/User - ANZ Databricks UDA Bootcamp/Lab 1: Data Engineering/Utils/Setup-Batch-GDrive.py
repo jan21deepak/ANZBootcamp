@@ -13,7 +13,8 @@ db_name = spark.conf.get("com.databricks.training.spark.dbName")
 username = spark.conf.get("com.databricks.training.spark.userName").replace('.', '_')
 #username = dbutils.widgets.get("user_name")
 base_table_path = f"dbfs:/FileStore/{username}/bootcamp_data/"
-local_data_path = f"{username}_bootcamp_data/"
+#local_data_path = f"{username}_bootcamp_data/"
+local_data_path = f"/dbfs/FileStore/{username}/bootcamp_data/"
 
 # Construct the unique database name
 database_name = db_name
@@ -42,17 +43,17 @@ spark.sql(f"USE {database_name}")
 
 #donwload the file to local file path and move it to DBFS
 
-import subprocess
-
-
-# Delete local directories that may be present from a previous run
-
-process = subprocess.Popen(['rm', '-f', '-r', local_data_path],
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
-
-stdout.decode('utf-8'), stderr.decode('utf-8')
+#import subprocess
+#
+#
+## Delete local directories that may be present from a previous run
+#
+#process = subprocess.Popen(['rm', '-f', '-r', local_data_path],
+#                     stdout=subprocess.PIPE, 
+#                     stderr=subprocess.PIPE)
+#stdout, stderr = process.communicate()
+#
+#stdout.decode('utf-8'), stderr.decode('utf-8')
 
 
 
@@ -61,12 +62,12 @@ stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # Create local directories used in the workshop
 
-process = subprocess.Popen(['mkdir', '-p', local_data_path],
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE)
-stdout, stderr = process.communicate()
-
-stdout.decode('utf-8'), stderr.decode('utf-8')
+#process = subprocess.Popen(['mkdir', '-p', local_data_path],
+#                     stdout=subprocess.PIPE, 
+#                     stderr=subprocess.PIPE)
+#stdout, stderr = process.communicate()
+#
+#stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
@@ -135,10 +136,11 @@ def download_file_from_google_drive(id, destination):
 
 local_file_his = local_data_path + "historical_sensor_data.csv"
 
+
 download_file_from_google_drive("17ph7fNX8Wua9rAsAnmN87vf_Ikp9DPUJ", local_file_his)
 
 
-dbutils.fs.cp(f"file:/databricks/driver/{local_file_his}", f"{base_table_path}historical_sensor_data.csv")
+#dbutils.fs.cp(f"file:/databricks/driver/{local_file_his}", f"{base_table_path}historical_sensor_data.csv")
 
 # COMMAND ----------
 
@@ -148,7 +150,7 @@ local_file_bf = local_data_path + "backfill_sensor_data_final.csv"
 
 download_file_from_google_drive("1jGE_vm7JVAA0gvXvJx3hheI5Ztoz2qMG", local_file_bf)
 
-dbutils.fs.cp(f"file:/databricks/driver/{local_file_bf}", f"{base_table_path}backfill_sensor_data_final.csv")
+#dbutils.fs.cp(f"file:/databricks/driver/{local_file_bf}", f"{base_table_path}backfill_sensor_data_final.csv")
 
 # COMMAND ----------
 
@@ -158,7 +160,7 @@ local_file_cl = local_data_path + "sensor_readings_current_labeled.csv"
 
 download_file_from_google_drive("1Ed9CHIELEJHJVIMfML8ytQicaRLlKuYh", local_file_cl)
 
-dbutils.fs.cp(f"file:/databricks/driver/{local_file_cl}", f"{base_table_path}sensor_readings_current_labeled.csv")
+#dbutils.fs.cp(f"file:/databricks/driver/{local_file_cl}", f"{base_table_path}sensor_readings_current_labeled.csv")
 
 # COMMAND ----------
 
@@ -169,11 +171,7 @@ local_file_pd = local_data_path + "plant_data.csv"
 
 download_file_from_google_drive("1eMB5wy1wa9hh1qgk_pEwvOICn367UdfJ", local_file_pd)
 
-dbutils.fs.cp(f"file:/databricks/driver/{local_file_pd}", f"{base_table_path}plant_data.csv")
-
-# COMMAND ----------
-
-display(dbutils.fs.ls(f"{base_table_path}"))
+#dbutils.fs.cp(f"file:/databricks/driver/{local_file_pd}", f"{base_table_path}plant_data.csv")
 
 # COMMAND ----------
 
