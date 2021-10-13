@@ -61,24 +61,24 @@ spark.sql(f"USE {database_name}")
 
 # COMMAND ----------
 
-#import subprocess
+import subprocess
 # 
 ##Delete local directories that may be present from a previous run 
-#process = subprocess.Popen(['rm', '-f', '-r', local_data_path],
-#                     stdout=subprocess.PIPE, 
-#                     stderr=subprocess.PIPE)
-#stdout, stderr = process.communicate()
-# 
-#stdout.decode('utf-8'), stderr.decode('utf-8')
+process = subprocess.Popen(['rm', '-f', '-r', local_data_path],
+                     stdout=subprocess.PIPE, 
+                     stderr=subprocess.PIPE)
+stdout, stderr = process.communicate()
+ 
+stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
-#process = subprocess.Popen(['mkdir', '-p', local_data_path],
-#                     stdout=subprocess.PIPE, 
-#                     stderr=subprocess.PIPE)
-#stdout, stderr = process.communicate()
-# 
-#stdout.decode('utf-8'), stderr.decode('utf-8')
+process = subprocess.Popen(['mkdir', '-p', local_data_path],
+                     stdout=subprocess.PIPE, 
+                     stderr=subprocess.PIPE)
+stdout, stderr = process.communicate()
+ 
+stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
