@@ -82,7 +82,7 @@ stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
-!pip install --upgrade google-api-python-client
+!pip install google-api-python-client google_auth_oauthlib tqdm
 import pickle
 import os
 import re

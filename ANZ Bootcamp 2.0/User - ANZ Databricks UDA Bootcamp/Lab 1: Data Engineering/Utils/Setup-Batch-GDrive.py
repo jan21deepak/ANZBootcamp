@@ -71,7 +71,7 @@ stdout.decode('utf-8'), stderr.decode('utf-8')
 
 # COMMAND ----------
 
-!pip install google-api-python-client
+!pip install google-api-python-client google_auth_oauthlib tqdm
 
 # COMMAND ----------
 
