@@ -646,8 +646,8 @@ display(df)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC SELECT * FROM sensor_readings_historical_bronze WHERE device_id = '7G007R' AND device_operational_status != 'NOMINAL'
+# For our dataset of aprox 300MB we could get better performance with smaller fiels - let’s change max file size to 10MB: 10485760
+spark.conf.set(“spark.databricks.delta.optimize.maxFileSize”,10485760)
 
 # COMMAND ----------
 

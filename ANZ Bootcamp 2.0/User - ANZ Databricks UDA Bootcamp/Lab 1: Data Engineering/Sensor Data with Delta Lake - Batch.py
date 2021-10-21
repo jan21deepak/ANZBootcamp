@@ -651,6 +651,11 @@ display(df)
 
 # COMMAND ----------
 
+# For our dataset of aprox 300MB we could get better performance with smaller fiels - let’s change max file size to 10MB: 10485760
+spark.conf.set(“spark.databricks.delta.optimize.maxFileSize”,10485760)
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC OPTIMIZE sensor_readings_historical_bronze ZORDER BY (device_id, device_operational_status)
 
